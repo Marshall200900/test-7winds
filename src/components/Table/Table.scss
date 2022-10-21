@@ -1,0 +1,35 @@
+.Table {
+    width: calc(100% - 20px);
+
+    margin: 12px;
+
+    box-sizing: border-box;
+
+    font-size: 14px;
+
+    border-collapse: collapse;
+
+    td, th {
+        text-align: left;
+    }
+
+    &__Row {
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    &__Head {
+        color: var(--secondary-color);
+
+        th {
+            padding: 0 12px 12px 12px;
+        }
+    }
+
+    &__Body {
+
+    }
+
+    &__Name {
+        width: 757px;
+    }
+}

@@ -1,0 +1,37 @@
+.Navbar {
+    background-color: var(--secondary-background);
+    border-bottom: 1px solid var(--border-color);
+
+    display: flex;
+    align-items: center;
+    
+
+    :nth-child(1) {
+        margin-left: 24px;
+    }
+
+    :nth-child(2) {
+        margin-left: 27px;
+    }
+
+    :nth-child(3) {
+        width: 73px;
+        margin-left: 31px;
+        border-bottom: 2px solid white;
+    }
+
+    :nth-child(4) {
+        color: var(--secondary-color);
+        margin-left: 24px;
+    }
+
+    &__Text {
+        font-size: 14px;
+
+        height: 45px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+}

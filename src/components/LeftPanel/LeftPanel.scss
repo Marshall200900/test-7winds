@@ -1,0 +1,46 @@
+.LeftPanel {
+    width: 235px;
+
+    background-color: var(--secondary-background);
+    border-right: 1px solid var(--border-color);
+
+    &__Collapse {
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0px 13px 0px 20px;
+
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    &__Titles {
+        color: var(--secondary-color);
+
+        display: flex;
+        flex-direction: column;        
+    }
+
+    &__Name {
+        font-size: 14px;
+    }
+
+    &__Abbr {
+        font-size: 10px;
+    }
+    
+    &__Item {
+        display: flex;
+        align-items: center;
+        gap: 16.75px;
+
+        padding-left: 22.75px;
+
+        width: 235px;
+        height: 32px;
+    }
+    
+    &__ItemText {
+        font-size: 14px;
+    }
+}

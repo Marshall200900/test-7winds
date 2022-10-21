@@ -1,0 +1,21 @@
+.Content {
+    flex-grow: 1;
+
+    &__Info {
+        background-color: var(--secondary-background);
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    &__InfoText {
+        border-right: 1px solid var(--border-color);
+        width: 312px;
+        height: 45px;
+
+        font-size: 18px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+}
