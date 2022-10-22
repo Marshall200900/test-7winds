@@ -13,6 +13,7 @@ interface HierItemProps {
     level: number,
     addItem: (item: HierarchyData) => void,
     sendItem: (data: HierarchyData, parent: HierarchyData | null) => void,
+    deleteItem: (data: HierarchyData, parent: HierarchyData | null) => Promise<void>,
     parentNode: HierarchyData | null,
 }
 
@@ -44,6 +45,7 @@ export const HierItem: React.FC<HierItemProps> = ({
     sendItem,
     level = 0,
     parentNode,
+    deleteItem,
 }) => {
     const [rowNameInput, setRowNameInput] = useState('');
     const [salaryInput, setSalaryInput] = useState(0);
@@ -71,15 +73,15 @@ export const HierItem: React.FC<HierItemProps> = ({
         addItem(data);
     }
 
-    const imgList = [
 
-        <Image key={0} src={GarbageBin} id={id + 'delete'} className="Table__IconSecondary" />
+    const imgList = [
+        <Image onClick={() => deleteItem(data, parentNode)}  key={0} src={GarbageBin} id={id + 'delete'} className="Table__IconSecondary" />
     ];
     if (data.child?.length) {
-        imgList.unshift(<Image key={1} src={File} id={id + 'delete'} className="Table__IconSecondary" />)
+        imgList.unshift(<Image key={1} src={File} id={id + 'file'} className="Table__IconSecondary" />)
     }
     if (level === 0) {
-        imgList.unshift(<Image key={2} src={Folder2} id={id + 'delete'} className="Table__IconSecondary" />)
+        imgList.unshift(<Image key={2} src={Folder2} id={id + 'folder2'} className="Table__IconSecondary" />)
     }
 
     const onInput = (e: React.FormEvent<HTMLInputElement>, callback: React.Dispatch<React.SetStateAction<number>>) => {

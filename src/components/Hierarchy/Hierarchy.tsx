@@ -135,6 +135,23 @@ export const Hierarchy = () => {
         setData([...data]);
     }
 
+    const deleteItem = async (item: HierarchyData, parentNode: HierarchyData | null) => {
+        const res = await fetch(`http://185.244.172.108:8081/v1/outlay-rows/entity/22/row/${item.id}/delete`, {
+            method: 'DELETE'
+        });
+        if (res.ok) {
+            if(parentNode) {
+                parentNode.child = parentNode.child?.filter(el => el.id === item.id);
+                setData([...data]);
+            } else {
+                let newData = data;
+                newData = data.filter(el => el.id !== item.id);
+                setData([...newData]);
+            }
+
+        }
+    }
+
     const sendItem = async (item: HierarchyData, parentNode: HierarchyData | null) => {
         let newData = data;
         const res = await fetch('http://185.244.172.108:8081/v1/outlay-rows/entity/22/row/create', {
@@ -161,16 +178,20 @@ export const Hierarchy = () => {
 
     }
 
-    const deleteItem = () => {
-
-    }
-
     const renderItems = (data: HierarchyData, idx: number, parentIdx: string, level = 0, parentNode: HierarchyData | null = null): JSX.Element => {
         const id = getId(parentIdx, idx);
 
         return (
             <React.Fragment key={data.id}>
-                <HierItem parentNode={null} data={data} id={id} level={level} addItem={addItem} sendItem={sendItem} />
+                <HierItem
+                    parentNode={null}
+                    data={data}
+                    id={id}
+                    level={level}
+                    addItem={addItem}
+                    sendItem={sendItem}
+                    deleteItem={deleteItem}
+                />
                 {data.child?.map((row, idx) => {
                     return renderItems(row, idx, id,  level + 1, data || null)
                 })}
