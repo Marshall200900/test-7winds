@@ -32,8 +32,8 @@ export const LeftPanel = () => {
                 <img src={Arrow} className="LeftPanel__Image" />
             </div>
             <div className="LeftPanel__Content">
-                {names.map(name => (
-                    <div className="LeftPanel__Item">
+                {names.map((name, idx) => (
+                    <div key={idx} className="LeftPanel__Item">
                         <img src={Square} alt="weird square" className="LeftPanel__ItemImage" />
                         <span className="LeftPanel__ItemText">{name}</span>
                     </div>

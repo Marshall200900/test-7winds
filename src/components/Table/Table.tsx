@@ -1,49 +1,13 @@
+import { useEffect, useState } from 'react';
 import Folder1 from '../../assets/folder1.svg';
 import Folder2 from '../../assets/folder2.svg';
+import File from '../../assets/file.svg';
+import { Hierarchy } from '../Hierarchy/Hierarchy';
 
 import './Table.scss';
 
-// const data = [
-//     {
-//         data: 'Южная строительная площадка',
-//         child: [
-//             {
-//                 data: 'Фундаментальные работы',
-//                 child: [
-//                     {
-//                         data: 'Статья работы №1'
-//                     },
-//                     {
-//                         data: 'Статья работы №2'
-//                     },
-//                 ]
-//             }
-//         ]
-//     },
-// ]
-
-// const renderHierarchy = (data: { data: string }[]) => {
-//     data.map(row => {
-//         return (
-//             <>
-//                 <tr>
-//                     <td>{Folder2}</td>
-//                     <td>{row.data}</td>
-//                     <td>0</td>
-//                     <td>0</td>
-//                     <td>0</td>
-//                     <td>0</td>
-//                 </tr>
-//                 {renderHierarchy}
-//             </>
-//         )
-//     })
-// }
 
 export const Table = () => {
-
-
-
     return (
         <table className="Table">
             <thead className="Table__Head">
@@ -57,6 +21,7 @@ export const Table = () => {
                 </tr>
             </thead>
             <tbody className="Table__Body">
+                <Hierarchy />
             </tbody>
         </table>
     )

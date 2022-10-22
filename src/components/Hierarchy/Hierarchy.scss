@@ -1,0 +1,19 @@
+.Hierarchy {
+    &__ImgGroup {
+        display: flex;
+        gap: 12px;
+        width: fit-content;
+        padding: 6px;
+        box-sizing: border-box;
+
+        &:hover {
+            background-color: var(--border-color);
+            border-radius: 6px;
+
+
+            .Table__IconSecondary {
+                display: block;
+            }
+        }
+    }   
+}

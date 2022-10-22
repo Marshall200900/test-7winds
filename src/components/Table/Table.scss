@@ -9,27 +9,57 @@
 
     border-collapse: collapse;
 
-    td, th {
-        text-align: left;
+    th {
+        white-space: nowrap;
+        padding: 0 12px 12px 12px;
     }
 
-    &__Row {
-        border-bottom: 1px solid var(--border-color);
-    }
 
+    
     &__Head {
         color: var(--secondary-color);
-
-        th {
-            padding: 0 12px 12px 12px;
-        }
+        
+        
     }
-
+    
     &__Body {
-
+        td {
+            // padding: 21px 12px;
+            border-top: 1px solid var(--border-color);
+        }
+        
     }
-
+    
     &__Name {
         width: 757px;
+    }
+    
+    &__Input {
+        height: 36px;
+        width: 100%;
+        
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding-left: 10px;
+        background: none;
+        color: white;
+    }
+
+    &__Data {
+        z-index: 2;
+
+        text-align: left;
+        white-space: nowrap;
+
+        padding: 21px 12px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    &__IconSecondary {
+        display: none;
+    }
+
+    &__DataFirst {
+        padding-right: 0;
     }
 }
