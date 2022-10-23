@@ -11,7 +11,7 @@ interface HierItemProps {
     data: HierarchyData,
     id: string,
     level: number,
-    addItem: (item: HierarchyData) => void,
+    addItem: (item: HierarchyData | null) => void,
     sendItem: (data: HierarchyData, parent: HierarchyData | null) => void,
     deleteItem: (data: HierarchyData, parent: HierarchyData | null) => Promise<void>,
     parentNode: HierarchyData | null,
@@ -23,8 +23,6 @@ interface ImageProps {
     id: string,
     src: string, 
 }
-
-type RenderHierarchyType = (data: HierarchyData[], level?: number, parentStrId?: string) => React.ReactNode;
 
 const Image: React.FC<ImageProps> = ({ className, id, src, onClick }) => {
     return (
@@ -55,9 +53,10 @@ export const HierItem: React.FC<HierItemProps> = ({
 
     const event = (ev: React.KeyboardEvent) => {
         if (ev.key === 'Enter') {
-            console.log('send');
+            console.log(parentNode?.id);
             sendItem(createItem({
                 parentId: parentNode?.id || null,
+                parentNode,
                 rowName: rowNameInput,
                 salary: salaryInput,
                 equipmentCosts: equipmentCostsInput,
@@ -68,11 +67,17 @@ export const HierItem: React.FC<HierItemProps> = ({
     };
     
     const src = level === 0 ? Folder1 : data.child?.length ? Folder2 : File;
-
+    
     const addChild = () => {
         addItem(data);
     }
-
+    
+    const addSibling = () => {
+        addItem(parentNode);
+        
+    }
+    
+    const func = level === 0 ? addSibling : addChild;
 
     const imgList = [
         <Image onClick={() => deleteItem(data, parentNode)}  key={0} src={GarbageBin} id={id + 'delete'} className="Table__IconSecondary" />
@@ -81,7 +86,7 @@ export const HierItem: React.FC<HierItemProps> = ({
         imgList.unshift(<Image key={1} src={File} id={id + 'file'} className="Table__IconSecondary" />)
     }
     if (level === 0) {
-        imgList.unshift(<Image key={2} src={Folder2} id={id + 'folder2'} className="Table__IconSecondary" />)
+        imgList.unshift(<Image onClick={addChild} key={2} src={Folder2} id={id + 'folder2'} className="Table__IconSecondary" />)
     }
 
     const onInput = (e: React.FormEvent<HTMLInputElement>, callback: React.Dispatch<React.SetStateAction<number>>) => {
@@ -127,7 +132,7 @@ export const HierItem: React.FC<HierItemProps> = ({
                         style={{ marginLeft: 26 * level }}
                         className="Hierarchy__ImgGroup">
                         <img
-                            onClick={addChild}
+                            onClick={func}
                             id={id}
                             className="Table__Icon"
                             src={src}
