@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import 'jquery-connections';
 
@@ -10,22 +10,22 @@ export interface HierarchyData {
     id?: number,
     parentNode: HierarchyData | null,
     parentId?: number | null,
-    rowName?: string,
-    total?: number,
-    salary?: number,
-    mimExploitation?: number,
-    machineOperatorSalary?: number,
-    materials?: number,
-    mainCosts?: number,
-    supportCosts?: number,
-    equipmentCosts?: number,
-    overheads?: number,
-    estimatedProfit?: number,
-    child?: HierarchyData[],
+    rowName: string,
+    total: number,
+    salary: number,
+    mimExploitation: number,
+    machineOperatorSalary: number,
+    materials: number,
+    mainCosts: number,
+    supportCosts: number,
+    equipmentCosts: number,
+    overheads: number,
+    estimatedProfit: number,
+    child: HierarchyData[],
     temp?: boolean,
 }
 
-export const createItem = (item: HierarchyData): HierarchyData => {
+export const createItem = (item: object): HierarchyData => {
     const hierBase: HierarchyData = {
         parentId: null,
         parentNode: null,
@@ -52,7 +52,6 @@ const getId = (parentStrId: string, idx: number) => {
     let id;
     if (parentStrId !== '') {
         elementsPair.push([parentStrId, `${parentStrId}${idx}`])
-        console.log(parentStrId);
         id = `${parentStrId}${idx}`;
     } else {
         id = `folder${idx}`;
@@ -70,13 +69,10 @@ const fetchedData = async () => {
 
 const createLines = () => {
     // for some reason jquery-connections does not work okay when immediately called
-    console.log(elementsPair);
     const elements = document.querySelectorAll('.connection');
-    console.log(elements);
     for(let el of elements) {
         el.remove();
     }
-    console.log(document.getElementsByClassName('connection'));
     setTimeout(() => {
         elementsPair.forEach(el => {
 
@@ -93,13 +89,37 @@ const createLines = () => {
 export const Hierarchy = () => {
     const [data, setData] = useState<HierarchyData[]>([]);
 
+    const [creating, setCreating] = useState<HierarchyData | undefined>();
+    const [editing, setEditing] = useState<HierarchyData | undefined>();
+
+
+    const evtClickDoc = () => {
+        if(creating) {
+            removeTemp();
+            setData([...data]);
+            setCreating(undefined);
+        }
+        if(editing) {
+            editing.temp = false;
+            setData([...data]);
+            setEditing(undefined);
+        }
+    };
+
     useEffect(() => {
         (async () => {
-            setData(await fetchedData());
+            const data = await fetchedData();
+            if (!data.length) {
+                const newItem = createItem({
+                    temp: true,
+                });
+                data.push(newItem);
+                setCreating(newItem);
+            } 
+            setData(data);
         })();
     }, []);
 
-    const [creating, setCreating] = useState<HierarchyData | undefined>();
 
 
     useEffect(() => {
@@ -114,6 +134,11 @@ export const Hierarchy = () => {
             // // @ts-ignore
             // $(`#${el[1]}`).connections("update");
         })
+
+        document.addEventListener('click', evtClickDoc);
+        return () => {
+            document.removeEventListener('click', evtClickDoc);
+        }
     });
 
     const removeTemp = () => {
@@ -166,7 +191,44 @@ export const Hierarchy = () => {
         }
     }
 
-    const sendItem = async (item: HierarchyData, parentNode: HierarchyData | null) => {
+    const sendItem = async (item: HierarchyData, parentNode: HierarchyData | null, originalItem: HierarchyData) => {
+        if(editing) {
+            submitEdit(item, originalItem);
+        } else {
+            submitSend(item, parentNode);
+        }
+    }
+
+    const editItem = (item: HierarchyData) => {
+        evtClickDoc();
+        item.temp = true;
+        setEditing(item);
+        setData([...data]);
+    }
+
+    const submitEdit = async (item: HierarchyData, originalItem: HierarchyData) => {
+        const itemToSend = { ...item, parentNode: null };
+        const res = await fetch('http://185.244.172.108:8081/v1/outlay-rows/entity/22/row/' + originalItem.id + '/update', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(itemToSend),
+        });
+        if(res.ok) {
+            const newItem: { current: HierarchyData } = await res.json();
+            originalItem.rowName = newItem.current.rowName;
+            originalItem.salary = newItem.current.salary;
+            originalItem.equipmentCosts = newItem.current.equipmentCosts;
+            originalItem.overheads = newItem.current.overheads;
+            originalItem.estimatedProfit = newItem.current.estimatedProfit;
+            originalItem.temp = false;
+            setData([...data]);
+            setCreating(undefined);
+        }
+    }
+
+    const submitSend = async (item: HierarchyData, parentNode: HierarchyData | null) => {
         const itemToSend = { ...item, parentNode: null };
         const res = await fetch('http://185.244.172.108:8081/v1/outlay-rows/entity/22/row/create', {
             method: 'POST',
@@ -190,13 +252,8 @@ export const Hierarchy = () => {
         }
     }
 
-    const editItem = () => {
-
-    }
-
     const renderItems = (data: HierarchyData, idx: number, parentIdx: string, level = 0, parentNode: HierarchyData | null = null): JSX.Element => {
         const id = getId(parentIdx, idx);
-        console.log(elementsPair);
         return (
             <React.Fragment key={data.id}>
                 <HierItem

@@ -12,7 +12,8 @@ interface HierItemProps {
     id: string,
     level: number,
     addItem: (item: HierarchyData | null) => void,
-    sendItem: (data: HierarchyData, parent: HierarchyData | null) => void,
+    sendItem: (data: HierarchyData, parent: HierarchyData | null, originalItem: HierarchyData) => void,
+    editItem: (data: HierarchyData) => void,
     deleteItem: (data: HierarchyData, parent: HierarchyData | null) => Promise<void>,
     parentNode: HierarchyData | null,
 }
@@ -22,6 +23,12 @@ interface ImageProps {
     className: string,
     id: string,
     src: string, 
+}
+
+interface InputProps {
+    onInput: (v: string | number) => void,
+    value: string | number,
+    onKeyUp: (ev: React.KeyboardEvent) => void,
 }
 
 const Image: React.FC<ImageProps> = ({ className, id, src, onClick }) => {
@@ -36,6 +43,22 @@ const Image: React.FC<ImageProps> = ({ className, id, src, onClick }) => {
     )
 }
 
+const Input: React.FC<InputProps> = ({ 
+    onInput,
+    value,
+    onKeyUp,
+ }) => {
+    return (
+        <input 
+            onInput={(e) => onInput(e.currentTarget.value)}
+            onClick={(el) => el.stopPropagation()}
+            value={value}
+            onKeyUp={onKeyUp}
+            placeholder={value.toString()}
+            className="Table__Input"
+        />
+    )
+}
 export const HierItem: React.FC<HierItemProps> = ({ 
     data,
     id,
@@ -43,26 +66,35 @@ export const HierItem: React.FC<HierItemProps> = ({
     sendItem,
     level = 0,
     parentNode,
+    editItem,
     deleteItem,
 }) => {
-    const [rowNameInput, setRowNameInput] = useState('');
-    const [salaryInput, setSalaryInput] = useState(0);
-    const [equipmentCostsInput, setEquipmentCostsInput] = useState(0);
-    const [overheadsInput, setOverheadsInput] = useState(0);
-    const [estimatedProfitInput, setEstimatedProfitInput] = useState(0);
+    const [rowNameInput, setRowNameInput] = useState(data.rowName);
+    const [salaryInput, setSalaryInput] = useState(data.salary);
+    const [equipmentCostsInput, setEquipmentCostsInput] = useState(data.equipmentCosts);
+    const [overheadsInput, setOverheadsInput] = useState(data.overheads);
+    const [estimatedProfitInput, setEstimatedProfitInput] = useState(data.estimatedProfit);
+
+    useEffect(() => {
+        setRowNameInput(data.rowName);
+        setSalaryInput(data.salary);
+        setEquipmentCostsInput(data.equipmentCosts)
+        setOverheadsInput(data.overheads)
+        setEstimatedProfitInput(data.estimatedProfit)
+    }, [data.temp]);
 
     const event = (ev: React.KeyboardEvent) => {
         if (ev.key === 'Enter') {
-            console.log(parentNode?.id);
             sendItem(createItem({
                 parentId: parentNode?.id || null,
+                id: data.id,
                 parentNode,
                 rowName: rowNameInput,
                 salary: salaryInput,
                 equipmentCosts: equipmentCostsInput,
                 overheads: overheadsInput,
                 estimatedProfit: estimatedProfitInput,
-            }), parentNode);
+            }), parentNode, data);
         }
     };
     
@@ -74,7 +106,6 @@ export const HierItem: React.FC<HierItemProps> = ({
     
     const addSibling = () => {
         addItem(parentNode);
-        
     }
     
     const func = level === 0 ? addSibling : addChild;
@@ -101,32 +132,60 @@ export const HierItem: React.FC<HierItemProps> = ({
                     <div
                         style={{ marginLeft: 26 * level }}
                         className="Hierarchy__ImgGroup">
-                        <img id={id} className="Table__Icon" src={File} alt="folder" />
+                        <img
+                            onClick={func}
+                            id={id}
+                            className="Table__Icon"
+                            src={src}
+                            alt="folder"
+                        />
                         {imgList}
                     </div>
                 </td>
                 <td className="Table__Data">
-                    <input onInput={(e) => setRowNameInput(e.currentTarget.value)} value={rowNameInput} onKeyUp={event} placeholder="" className="Table__Input" />
+                    <Input
+                        onInput={(v) => setRowNameInput(v as string)}
+                        value={rowNameInput}
+                        onKeyUp={event}
+                    />
                 </td>
                 <td className="Table__Data">
-                    <input onInput={(e) => onInput(e, setSalaryInput)} value={salaryInput} onKeyUp={event} placeholder="0" className="Table__Input" />
+                    <Input
+                        onInput={(v) => setSalaryInput(v as number)}
+                        value={salaryInput}
+                        onKeyUp={event}
+                    />
                 </td>
                 <td className="Table__Data">
-                    <input onInput={(e) => onInput(e, setEquipmentCostsInput)} value={equipmentCostsInput} onKeyUp={event} placeholder="0" className="Table__Input" />
+                    <Input
+                        onInput={(v) => setEquipmentCostsInput(v as number)}
+                        value={equipmentCostsInput}
+                        onKeyUp={event}
+                    />
                 </td>
                 <td className="Table__Data">
-                    <input onInput={(e) => onInput(e, setOverheadsInput)} value={overheadsInput} onKeyUp={event} placeholder="0" className="Table__Input" />
+                    <Input
+                        onInput={(v) => setOverheadsInput(v as number)}
+                        value={overheadsInput}
+                        onKeyUp={event}
+                    />
                 </td>
                 <td className="Table__Data">
-                    <input onInput={(e) => onInput(e, setEstimatedProfitInput)} value={estimatedProfitInput} onKeyUp={event} placeholder="0" className="Table__Input" />
+                    <Input
+                        onInput={(v) => setEstimatedProfitInput(v as number)}
+                        value={estimatedProfitInput}
+                        onKeyUp={event}
+                    />
                 </td>
             </tr>
         )
     }
+
+    const formatter = new Intl.NumberFormat('fr-FR');
     
     return (
         <>
-            <tr className="Table__Row">
+            <tr onClick={(el) => el.stopPropagation()} onDoubleClick={(e) => editItem(data)} className="Table__Row">
                 <td className="Table__Data Table__DataFirst" style={{ minWidth: 34 * (level + 1) + 60 }}>
                     <div
                         style={{ marginLeft: 26 * level }}
@@ -142,10 +201,10 @@ export const HierItem: React.FC<HierItemProps> = ({
                     </div>
                 </td>
                 <td className="Table__Data">{data.rowName}</td>
-                <td className="Table__Data">{data.salary}</td>
-                <td className="Table__Data">{data.equipmentCosts}</td>
-                <td className="Table__Data">{data.overheads}</td>
-                <td className="Table__Data">{data.estimatedProfit}</td>
+                <td className="Table__Data">{formatter.format(data.salary)}</td>
+                <td className="Table__Data">{formatter.format(data.equipmentCosts)}</td>
+                <td className="Table__Data">{formatter.format(data.overheads)}</td>
+                <td className="Table__Data">{formatter.format(data.estimatedProfit)}</td>
             </tr>
         </>
     )

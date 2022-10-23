@@ -9,7 +9,9 @@ export const Content = () => {
                     Строительно-монтажные работы
                 </div>
             </div>
-            <Table />
+            <div className="Content__TableWrapper">
+                <Table />
+            </div>
         </div>
     )
 }
