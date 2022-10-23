@@ -1,10 +1,11 @@
-import React, { useCallback, useEffect, useState } from 'react';
-
+import React, { useEffect, useState } from 'react';
+import { HierItem } from '../HierItem/HierItem';
 import 'jquery-connections';
 
 import './Hierarchy.scss';
-import { HierItem } from '../HierItem/HierItem';
 
+const BASE_URL = 'http://185.244.172.108:8081/v1/outlay-rows/entity/';
+const eID = '22';
 
 export interface HierarchyData {
     id?: number,
@@ -60,7 +61,7 @@ const getId = (parentStrId: string, idx: number) => {
 }
 
 const fetchedData = async () => {
-    const res = await fetch('http://185.244.172.108:8081/v1/outlay-rows/entity/22/row/list');
+    const res = await fetch(`${BASE_URL}${eID}/row/list`);
     if (res.ok) {
         return res.json();
     }
@@ -75,7 +76,6 @@ const createLines = () => {
     }
     setTimeout(() => {
         elementsPair.forEach(el => {
-
             // @ts-ignore
             $(`#${el[0]}`).connections({ to: `#${el[1]}` , css: {
                 border: '1px solid #C6C6C6',
@@ -87,21 +87,18 @@ const createLines = () => {
 }
 
 export const Hierarchy = () => {
-    const [data, setData] = useState<HierarchyData[]>([]);
 
+    const [data, setData] = useState<HierarchyData[]>([]);
+    const [init, setInit] = useState(false);
     const [creating, setCreating] = useState<HierarchyData | undefined>();
     const [editing, setEditing] = useState<HierarchyData | undefined>();
-
 
     const evtClickDoc = () => {
         if(creating) {
             removeTemp();
-            setData([...data]);
             setCreating(undefined);
-        }
-        if(editing) {
+        } else if (editing) {
             editing.temp = false;
-            setData([...data]);
             setEditing(undefined);
         }
     };
@@ -109,35 +106,34 @@ export const Hierarchy = () => {
     useEffect(() => {
         (async () => {
             const data = await fetchedData();
-            if (!data.length) {
-                const newItem = createItem({
-                    temp: true,
-                });
-                data.push(newItem);
-                setCreating(newItem);
-            } 
             setData(data);
+            setInit(true);
         })();
     }, []);
 
-
-
     useEffect(() => {
         createLines();
+        if (!data.length && init) {
+            const newItem = createItem({
+                temp: true,
+            });
+            data.push(newItem);
+            setCreating(newItem);
+        }
     }, [data]);
-
 
     useEffect(() => {
         elementsPair.forEach(el => {
             // @ts-ignore
             $(`#${el[0]}`).connections("update");
-            // // @ts-ignore
-            // $(`#${el[1]}`).connections("update");
         })
-
-        document.addEventListener('click', evtClickDoc);
+        const clear = () => {
+            evtClickDoc();
+            setData([...data]);
+        };
+        document.addEventListener('click', clear);
         return () => {
-            document.removeEventListener('click', evtClickDoc);
+            document.removeEventListener('click', clear);
         }
     });
 
@@ -150,10 +146,23 @@ export const Hierarchy = () => {
                 parent.child?.splice(parent.child.indexOf(creating), 1);
             }
         }
+        if (editing) {
+            let item;
+            if (editing.parentNode === null) {
+                item = data.find(el => el.id === editing.id);
+                data.splice(data.indexOf(editing), 1);
+            } else {
+                const parent = editing.parentNode;
+                item = parent.child?.find(el => el.id === editing.id);
+            }
+            if (item) {
+                item.temp = false;
+            }
+        }
     }
 
     const addItem = (parentNode: HierarchyData | null) => {
-        removeTemp();
+        evtClickDoc();
         if (parentNode) {
             const newItem = createItem({
                 parentId: parentNode.id,
@@ -174,7 +183,7 @@ export const Hierarchy = () => {
     }
 
     const deleteItem = async (item: HierarchyData, parentNode: HierarchyData | null) => {
-        const res = await fetch(`http://185.244.172.108:8081/v1/outlay-rows/entity/22/row/${item.id}/delete`, {
+        const res = await fetch(`${BASE_URL}${eID}/row/${item.id}/delete`, {
             method: 'DELETE'
         });
         if (res.ok) {
@@ -186,16 +195,14 @@ export const Hierarchy = () => {
                 newData = data.filter(el => el.id !== item.id);
                 setData([...newData]);
             }
-            
-
         }
     }
 
-    const sendItem = async (item: HierarchyData, parentNode: HierarchyData | null, originalItem: HierarchyData) => {
+    const sendItem = async (item: HierarchyData, originalItem: HierarchyData) => {
         if(editing) {
             submitEdit(item, originalItem);
         } else {
-            submitSend(item, parentNode);
+            submitSend(item);
         }
     }
 
@@ -208,7 +215,7 @@ export const Hierarchy = () => {
 
     const submitEdit = async (item: HierarchyData, originalItem: HierarchyData) => {
         const itemToSend = { ...item, parentNode: null };
-        const res = await fetch('http://185.244.172.108:8081/v1/outlay-rows/entity/22/row/' + originalItem.id + '/update', {
+        const res = await fetch(`${BASE_URL}${eID}/row/${originalItem.id}/update`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -228,9 +235,9 @@ export const Hierarchy = () => {
         }
     }
 
-    const submitSend = async (item: HierarchyData, parentNode: HierarchyData | null) => {
+    const submitSend = async (item: HierarchyData) => {
         const itemToSend = { ...item, parentNode: null };
-        const res = await fetch('http://185.244.172.108:8081/v1/outlay-rows/entity/22/row/create', {
+        const res = await fetch(`${BASE_URL}${eID}/row/create`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -240,8 +247,8 @@ export const Hierarchy = () => {
         if (res.ok) {
             const newItem: { current: { id: number } } = await res.json();
             item.id = newItem.current.id;
-            if (parentNode) {
-                parentNode.child?.push(item);
+            if (item.parentNode) {
+                item.parentNode.child?.push(item);
             } else {
                 data.push(item);
             }
@@ -254,10 +261,10 @@ export const Hierarchy = () => {
 
     const renderItems = (data: HierarchyData, idx: number, parentIdx: string, level = 0, parentNode: HierarchyData | null = null): JSX.Element => {
         const id = getId(parentIdx, idx);
+        data.parentNode = parentNode;
         return (
             <React.Fragment key={data.id}>
                 <HierItem
-                    parentNode={parentNode}
                     data={data}
                     id={id}
                     level={level}
@@ -272,9 +279,5 @@ export const Hierarchy = () => {
             </React.Fragment>
         )
     }
-    return (
-        <>
-            {data.map((el, idx) => renderItems(el, idx, ''))}
-        </>
-    )
+    return data.map((el, idx) => renderItems(el, idx, ''))
 }
